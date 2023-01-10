@@ -1,0 +1,48 @@
+#!/bin/bash
+
+check() {
+    isLocked="$(gdbus call -e -d org.gnome.ScreenSaver -o /org/gnome/ScreenSaver -m org.gnome.ScreenSaver.GetActive | grep -o '[a-z]*')"
+    currentSession="$(loginctl list-sessions | grep seat0 | awk '{print $1}')"
+}
+
+check2() {
+	ps -C i3lock h > /dev/null
+	exco=$?
+	if [ "$exco" == 0 ]; then
+		isLocked="true"
+	else
+		isLocked="false"
+	fi
+}
+
+check2
+if [[ $1 == "lock" ]]; then
+    if [[ $isLocked == "false" ]]; then
+	#loginctl lock-session $currentSession
+	$HOME/bin/i3lock.sh &
+	exit 0
+    elif [[ $isLocked == "true" ]]; then
+	echo "Already locked."
+	exit 1
+    fi
+fi
+
+if [[ $1 == "unlock" ]]; then
+    if [[ $isLocked == "true" ]]; then
+    	#loginctl unlock-session $currentSession
+		killall i3lock
+	exit 0
+    elif [[ $isLocked == "false" ]]; then
+    	#loginctl unlock-session $currentSession
+	echo "Already unlocked."
+	exit 1
+    fi
+fi
+
+if [[ $1 == "check" ]]; then
+    echo $isLocked
+    exit 0
+fi
+
+
+
